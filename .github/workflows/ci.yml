@@ -16,25 +16,19 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore FileProcessorApp/FileProcessorApp.csproj
+        run: dotnet restore src/QuickBite.API/QuickBite.API.csproj
 
-      - name: Build App
-        run: dotnet build FileProcessorApp/FileProcessorApp.csproj --configuration Release --no-restore
-
-      - name: Build Lib
-        run: dotnet build FileProcessorLib/FileProcessorLib.csproj --configuration Release --no-restore
+      - name: Build API
+        run: dotnet build src/QuickBite.API/QuickBite.API.csproj --configuration Release --no-restore
 
       - name: Build Tests
-        run: dotnet build FileProcessorTests/FileProcessorTests.csproj --configuration Release --no-restore
+        run: dotnet build tests/QuickBite.API.Tests/QuickBite.API.Tests.csproj --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test FileProcessorTests/FileProcessorTests.csproj --no-build --verbosity normal
+        run: dotnet test tests/QuickBite.API.Tests/QuickBite.API.Tests.csproj --no-build --verbosity normal
 
-      - name: Check formatting (app project)
-        run: dotnet format FileProcessorApp/FileProcessorApp.csproj --verify-no-changes
-
-      - name: Check formatting (lib project)
-        run: dotnet format FileProcessorLib/FileProcessorLib.csproj --verify-no-changes
+      - name: Check formatting (API project)
+        run: dotnet format src/QuickBite.API/QuickBite.API.csproj --verify-no-changes
 
       - name: Check formatting (test project)
-        run: dotnet format FileProcessorTests/FileProcessorTests.csproj --verify-no-changes
+        run: dotnet format tests/QuickBite.API.Tests/QuickBite.API.Tests.csproj --verify-no-changes

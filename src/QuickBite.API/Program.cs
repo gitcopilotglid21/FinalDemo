@@ -4,6 +4,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using QuickBite.API.Validators;
 using QuickBite.API.Middleware;
+using QuickBite.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,9 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<QuickBiteDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                      "Data Source=quickbite.db"));
+
+// Register business services
+builder.Services.AddScoped<IMenuItemService, MenuItemService>();
 
 // Configure FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -75,3 +79,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Make Program class accessible for testing
+public partial class Program { }
+
+

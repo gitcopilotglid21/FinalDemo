@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuickBite.API.Data;
 using QuickBite.API.DTOs;
-using QuickBite.API.Models;
-using System.Text.Json;
+using QuickBite.API.Exceptions;
+using QuickBite.API.Services;
 
 namespace QuickBite.API.Controllers
 {
@@ -16,12 +14,12 @@ namespace QuickBite.API.Controllers
     [Produces("application/json")]
     public class MenuItemsController : ControllerBase
     {
-        private readonly QuickBiteDbContext _context;
+        private readonly IMenuItemService _menuItemService;
         private readonly ILogger<MenuItemsController> _logger;
 
-        public MenuItemsController(QuickBiteDbContext context, ILogger<MenuItemsController> logger)
+        public MenuItemsController(IMenuItemService menuItemService, ILogger<MenuItemsController> logger)
         {
-            _context = context;
+            _menuItemService = menuItemService;
             _logger = logger;
         }
 
@@ -37,6 +35,7 @@ namespace QuickBite.API.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(PaginatedMenuItemsResponseDto), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
+        [ProducesResponseType(typeof(ErrorResponse), 500)]
         public async Task<ActionResult<PaginatedMenuItemsResponseDto>> GetMenuItems(
             [FromQuery] int page = 1,
             [FromQuery] int limit = 20,
@@ -46,56 +45,8 @@ namespace QuickBite.API.Controllers
         {
             try
             {
-                // Validate pagination parameters
-                if (page < 1) page = 1;
-                if (limit < 1) limit = 20;
-                if (limit > 100) limit = 100;
-
-                var query = _context.MenuItems.Where(m => m.DeletedAt == null);
-
-                // Apply filters
-                if (!string.IsNullOrEmpty(category))
-                {
-                    query = query.Where(m => m.Category == category);
-                }
-
-                if (!string.IsNullOrEmpty(search))
-                {
-                    query = query.Where(m => m.Name.Contains(search) || m.Description.Contains(search));
-                }
-
-                if (!string.IsNullOrEmpty(dietaryTags))
-                {
-                    var tags = dietaryTags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var tag in tags)
-                    {
-                        query = query.Where(m => m.DietaryTags != null && m.DietaryTags.Contains(tag.Trim()));
-                    }
-                }
-
-                var totalItems = await query.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalItems / limit);
-
-                var items = await query
-                    .OrderBy(m => m.Category)
-                    .ThenBy(m => m.Name)
-                    .Skip((page - 1) * limit)
-                    .Take(limit)
-                    .ToListAsync();
-
-                var response = new PaginatedMenuItemsResponseDto
-                {
-                    Data = items.Select(MapToResponseDto).ToList(),
-                    Pagination = new PaginationMetadata
-                    {
-                        Page = page,
-                        Limit = limit,
-                        Total = totalItems,
-                        TotalPages = totalPages
-                    }
-                };
-
-                return Ok(response);
+                var result = await _menuItemService.GetMenuItemsAsync(page, limit, category, dietaryTags, search);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -112,13 +63,12 @@ namespace QuickBite.API.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<MenuItemResponseDto>), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 404)]
+        [ProducesResponseType(typeof(ErrorResponse), 500)]
         public async Task<ActionResult<ApiResponse<MenuItemResponseDto>>> GetMenuItem(int id)
         {
             try
             {
-                var menuItem = await _context.MenuItems
-                    .Where(m => m.Id == id && m.DeletedAt == null)
-                    .FirstOrDefaultAsync();
+                var menuItem = await _menuItemService.GetMenuItemByIdAsync(id);
 
                 if (menuItem == null)
                 {
@@ -126,7 +76,7 @@ namespace QuickBite.API.Controllers
                 }
 
                 var response = ApiResponse<MenuItemResponseDto>.SuccessResponse(
-                    MapToResponseDto(menuItem),
+                    menuItem,
                     "Menu item retrieved successfully"
                 );
 
@@ -148,40 +98,27 @@ namespace QuickBite.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<MenuItemResponseDto>), 201)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [ProducesResponseType(typeof(ErrorResponse), 409)]
+        [ProducesResponseType(typeof(ErrorResponse), 500)]
         public async Task<ActionResult<ApiResponse<MenuItemResponseDto>>> CreateMenuItem([FromBody] CreateMenuItemDto createDto)
         {
             try
             {
-                // Check if menu item with same name exists in the same category
-                var existingItem = await _context.MenuItems
-                    .Where(m => m.Name == createDto.Name && m.Category == createDto.Category && m.DeletedAt == null)
-                    .FirstOrDefaultAsync();
-
-                if (existingItem != null)
-                {
-                    return Conflict(CreateErrorResponse("DUPLICATE_ITEM", $"Menu item '{createDto.Name}' already exists in category '{createDto.Category}'"));
-                }
-
-                var menuItem = new MenuItem
-                {
-                    Name = createDto.Name,
-                    Description = createDto.Description,
-                    Price = createDto.Price,
-                    Category = createDto.Category,
-                    DietaryTags = createDto.DietaryTags != null ? JsonSerializer.Serialize(createDto.DietaryTags) : null,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                _context.MenuItems.Add(menuItem);
-                await _context.SaveChangesAsync();
+                var menuItem = await _menuItemService.CreateMenuItemAsync(createDto);
 
                 var response = ApiResponse<MenuItemResponseDto>.SuccessResponse(
-                    MapToResponseDto(menuItem),
+                    menuItem,
                     "Menu item created successfully"
                 );
 
                 return CreatedAtAction(nameof(GetMenuItem), new { id = menuItem.Id }, response);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(CreateErrorResponse("DUPLICATE_ITEM", ex.Message));
+            }
+            catch (BusinessLogicException ex)
+            {
+                return BadRequest(CreateErrorResponse(ex.ErrorCode, ex.Message));
             }
             catch (Exception ex)
             {
@@ -191,36 +128,85 @@ namespace QuickBite.API.Controllers
         }
 
         /// <summary>
-        /// Maps MenuItem entity to response DTO
+        /// Update an existing menu item
         /// </summary>
-        private static MenuItemResponseDto MapToResponseDto(MenuItem menuItem)
+        /// <param name="id">Menu item ID</param>
+        /// <param name="updateDto">Menu item update data</param>
+        /// <returns>Updated menu item</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(ApiResponse<MenuItemResponseDto>), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        [ProducesResponseType(typeof(ErrorResponse), 404)]
+        [ProducesResponseType(typeof(ErrorResponse), 409)]
+        [ProducesResponseType(typeof(ErrorResponse), 500)]
+        public async Task<ActionResult<ApiResponse<MenuItemResponseDto>>> UpdateMenuItem(int id, [FromBody] UpdateMenuItemDto updateDto)
         {
-            var dietaryTags = new List<string>();
-            if (!string.IsNullOrEmpty(menuItem.DietaryTags))
+            try
             {
-                try
-                {
-                    dietaryTags = JsonSerializer.Deserialize<List<string>>(menuItem.DietaryTags) ?? new List<string>();
-                }
-                catch
-                {
-                    // If JSON deserialization fails, treat as empty list
-                    dietaryTags = new List<string>();
-                }
-            }
+                var menuItem = await _menuItemService.UpdateMenuItemAsync(id, updateDto);
 
-            return new MenuItemResponseDto
+                if (menuItem == null)
+                {
+                    return NotFound(CreateErrorResponse("NOT_FOUND", $"Menu item with ID {id} not found"));
+                }
+
+                var response = ApiResponse<MenuItemResponseDto>.SuccessResponse(
+                    menuItem,
+                    "Menu item updated successfully"
+                );
+
+                return Ok(response);
+            }
+            catch (InvalidOperationException ex)
             {
-                Id = menuItem.Id,
-                Name = menuItem.Name,
-                Description = menuItem.Description,
-                Price = menuItem.Price,
-                Category = menuItem.Category,
-                DietaryTags = dietaryTags,
-                CreatedAt = menuItem.CreatedAt,
-                UpdatedAt = menuItem.UpdatedAt
-            };
+                return Conflict(CreateErrorResponse("DUPLICATE_ITEM", ex.Message));
+            }
+            catch (BusinessLogicException ex)
+            {
+                return BadRequest(CreateErrorResponse(ex.ErrorCode, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating menu item {Id}", id);
+                return StatusCode(500, CreateErrorResponse("INTERNAL_ERROR", "An error occurred while updating the menu item"));
+            }
         }
+
+        /// <summary>
+        /// Delete a menu item (soft delete)
+        /// </summary>
+        /// <param name="id">Menu item ID</param>
+        /// <returns>Success confirmation</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 404)]
+        [ProducesResponseType(typeof(ErrorResponse), 500)]
+        public async Task<ActionResult<ApiResponse<object>>> DeleteMenuItem(int id)
+        {
+            try
+            {
+                var deleted = await _menuItemService.DeleteMenuItemAsync(id);
+
+                if (!deleted)
+                {
+                    return NotFound(CreateErrorResponse("NOT_FOUND", $"Menu item with ID {id} not found"));
+                }
+
+                var response = ApiResponse<object>.SuccessResponse(
+                    new { },
+                    "Menu item deleted successfully"
+                );
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting menu item {Id}", id);
+                return StatusCode(500, CreateErrorResponse("INTERNAL_ERROR", "An error occurred while deleting the menu item"));
+            }
+        }
+
+        #region Private Helper Methods
 
         /// <summary>
         /// Creates standardized error response
@@ -238,5 +224,7 @@ namespace QuickBite.API.Controllers
                 }
             };
         }
+
+        #endregion
     }
 }
