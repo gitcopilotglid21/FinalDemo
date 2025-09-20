@@ -11,13 +11,13 @@ namespace QuickBite.API.Validators
     public class CreateMenuItemDtoValidator : AbstractValidator<CreateMenuItemDto>
     {
         // Predefined categories as specified in BRD
-        private readonly string[] _validCategories = 
+        private readonly string[] _validCategories =
         {
             "Appetizers", "Salads", "Soups", "Main Course", "Desserts", "Beverages"
         };
 
         // Predefined dietary tags as specified in BRD
-        private readonly string[] _validDietaryTags = 
+        private readonly string[] _validDietaryTags =
         {
             "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut-Free", "Spicy", "Low-Carb", "Halal", "Kosher", "Jhatka", "Non-Vegetarian"
         };

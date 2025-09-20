@@ -12,7 +12,7 @@ namespace QuickBite.API.Exceptions
             ErrorCode = errorCode;
         }
 
-        public BusinessLogicException(string errorCode, string message, Exception innerException) 
+        public BusinessLogicException(string errorCode, string message, Exception innerException)
             : base(message, innerException)
         {
             ErrorCode = errorCode;

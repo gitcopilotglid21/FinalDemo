@@ -38,13 +38,13 @@ namespace QuickBite.API.Validators
     public class MenuItemQueryValidator : AbstractValidator<MenuItemQueryParameters>
     {
         // Predefined categories as specified in BRD
-        private readonly string[] _validCategories = 
+        private readonly string[] _validCategories =
         {
             "Appetizers", "Salads", "Soups", "Main Course", "Desserts", "Beverages"
         };
 
         // Predefined dietary tags as specified in BRD
-        private readonly string[] _validDietaryTags = 
+        private readonly string[] _validDietaryTags =
         {
             "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut-Free", "Spicy", "Low-Carb"
         };
@@ -78,11 +78,11 @@ namespace QuickBite.API.Validators
                     .Must(dietaryTagsString =>
                     {
                         if (string.IsNullOrEmpty(dietaryTagsString)) return true;
-                        
+
                         var tags = dietaryTagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                                    .Select(t => t.Trim())
                                                    .ToArray();
-                        
+
                         return tags.All(tag => _validDietaryTags.Contains(tag));
                     })
                     .WithMessage($"All dietary tags must be from: {string.Join(", ", _validDietaryTags)}");

@@ -123,7 +123,7 @@ namespace QuickBite.API.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Data.Should().HaveCount(2);
-            result.Data.Should().OnlyContain(item => 
+            result.Data.Should().OnlyContain(item =>
                 item.Name.Contains("Salad") ||
                 item.Description.Contains("salad"));
         }
@@ -268,7 +268,7 @@ namespace QuickBite.API.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => _service.CreateMenuItemAsync(createDto));
-            
+
             exception.Message.Should().Contain("already exists");
         }
 
@@ -356,7 +356,7 @@ namespace QuickBite.API.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => _service.UpdateMenuItemAsync(item2.Id, updateDto));
-            
+
             exception.Message.Should().Contain("already exists");
         }
 
@@ -484,9 +484,9 @@ namespace QuickBite.API.Tests.Services
         }
 
         private MenuItem CreateMenuItem(
-            string name, 
-            string category, 
-            string description = "Test description", 
+            string name,
+            string category,
+            string description = "Test description",
             decimal price = 10.99m,
             List<string>? dietaryTags = null,
             DateTime? deletedAt = null)

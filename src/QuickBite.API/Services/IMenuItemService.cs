@@ -11,10 +11,10 @@ namespace QuickBite.API.Services
         /// Get paginated menu items with optional filtering
         /// </summary>
         Task<PaginatedMenuItemsResponseDto> GetMenuItemsAsync(
-            int page, 
-            int limit, 
-            string? category = null, 
-            string? dietaryTags = null, 
+            int page,
+            int limit,
+            string? category = null,
+            string? dietaryTags = null,
             string? search = null);
 
         /// <summary>

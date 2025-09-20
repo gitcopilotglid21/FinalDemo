@@ -21,10 +21,10 @@ namespace QuickBite.API.Services
         }
 
         public async Task<PaginatedMenuItemsResponseDto> GetMenuItemsAsync(
-            int page, 
-            int limit, 
-            string? category = null, 
-            string? dietaryTags = null, 
+            int page,
+            int limit,
+            string? category = null,
+            string? dietaryTags = null,
             string? search = null)
         {
             try
@@ -62,7 +62,7 @@ namespace QuickBite.API.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving menu items with filters: category={Category}, dietaryTags={DietaryTags}, search={Search}", 
+                _logger.LogError(ex, "Error retrieving menu items with filters: category={Category}, dietaryTags={DietaryTags}, search={Search}",
                     category, dietaryTags, search);
                 throw;
             }
@@ -109,14 +109,14 @@ namespace QuickBite.API.Services
                 _context.MenuItems.Add(menuItem);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Created menu item {Name} in category {Category} with ID {Id}", 
+                _logger.LogInformation("Created menu item {Name} in category {Category} with ID {Id}",
                     menuItem.Name, menuItem.Category, menuItem.Id);
 
                 return MapToResponseDto(menuItem);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating menu item {Name} in category {Category}", 
+                _logger.LogError(ex, "Error creating menu item {Name} in category {Category}",
                     createDto.Name, createDto.Category);
                 throw;
             }
@@ -140,7 +140,7 @@ namespace QuickBite.API.Services
                 {
                     var newName = updateDto.Name ?? menuItem.Name;
                     var newCategory = updateDto.Category ?? menuItem.Category;
-                    
+
                     if (await MenuItemExistsAsync(newName, newCategory, id))
                     {
                         throw new InvalidOperationException($"Menu item '{newName}' already exists in category '{newCategory}'");
@@ -152,7 +152,7 @@ namespace QuickBite.API.Services
                 if (updateDto.Description != null) menuItem.Description = updateDto.Description;
                 if (updateDto.Price.HasValue) menuItem.Price = updateDto.Price.Value;
                 if (updateDto.Category != null) menuItem.Category = updateDto.Category;
-                if (updateDto.DietaryTags != null) 
+                if (updateDto.DietaryTags != null)
                 {
                     menuItem.DietaryTags = updateDto.DietaryTags.Any() ? JsonSerializer.Serialize(updateDto.DietaryTags) : null;
                 }
@@ -226,9 +226,9 @@ namespace QuickBite.API.Services
         #region Private Helper Methods
 
         private static IQueryable<MenuItem> ApplyFilters(
-            IQueryable<MenuItem> query, 
-            string? category, 
-            string? dietaryTags, 
+            IQueryable<MenuItem> query,
+            string? category,
+            string? dietaryTags,
             string? search)
         {
             if (!string.IsNullOrEmpty(category))

@@ -13,7 +13,7 @@ builder.Services.AddControllers();
 
 // Configure Entity Framework with SQLite
 builder.Services.AddDbContext<QuickBiteDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ??
                      "Data Source=quickbite.db"));
 
 // Register business services
@@ -28,18 +28,18 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateMenuItemDtoValidator>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "QuickBite API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "QuickBite API",
         Version = "v1",
         Description = "A RESTful API for restaurant menu management with comprehensive validation",
-        Contact = new() 
-        { 
+        Contact = new()
+        {
             Name = "QuickBite Team",
             Email = "support@quickbite.com"
         }
     });
-    
+
     // Include XML comments for better documentation
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

@@ -10,13 +10,13 @@ namespace QuickBite.API.Validators
     public class UpdateMenuItemDtoValidator : AbstractValidator<UpdateMenuItemDto>
     {
         // Predefined categories as specified in BRD
-        private readonly string[] _validCategories = 
+        private readonly string[] _validCategories =
         {
             "Appetizers", "Salads", "Soups", "Main Course", "Desserts", "Beverages"
         };
 
         // Predefined dietary tags as specified in BRD
-        private readonly string[] _validDietaryTags = 
+        private readonly string[] _validDietaryTags =
         {
             "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut-Free", "Spicy", "Low-Carb", "Halal", "Kosher", "Jhatka", "Non-Vegetarian"
         };
@@ -76,10 +76,10 @@ namespace QuickBite.API.Validators
 
             // Custom validation to ensure at least one field is being updated
             RuleFor(x => x)
-                .Must(dto => !string.IsNullOrEmpty(dto.Name) || 
-                           !string.IsNullOrEmpty(dto.Description) || 
-                           dto.Price.HasValue || 
-                           !string.IsNullOrEmpty(dto.Category) || 
+                .Must(dto => !string.IsNullOrEmpty(dto.Name) ||
+                           !string.IsNullOrEmpty(dto.Description) ||
+                           dto.Price.HasValue ||
+                           !string.IsNullOrEmpty(dto.Category) ||
                            dto.DietaryTags != null)
                 .WithMessage("At least one field must be provided for update");
         }

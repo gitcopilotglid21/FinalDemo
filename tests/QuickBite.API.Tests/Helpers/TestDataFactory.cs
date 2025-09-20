@@ -33,7 +33,7 @@ namespace QuickBite.API.Tests.Helpers
             DateTime? deletedAt = null)
         {
             var now = DateTime.UtcNow;
-            
+
             return new MenuItem
             {
                 Name = name ?? _fixture.Create<string>(),
@@ -108,7 +108,7 @@ namespace QuickBite.API.Tests.Helpers
             DateTime? updatedAt = null)
         {
             var now = DateTime.UtcNow;
-            
+
             return new MenuItemResponseDto
             {
                 Id = id ?? _fixture.Create<int>(),

@@ -11,11 +11,11 @@ if ! dotnet build; then
   exit 1
 fi
 
-# echo "checking format"
-# if ! dotnet format --verify-no-changes; then
-#   echo "Code format issues found. Please run 'dotnet format' to fix them. Commit aborted."
-#   exit 1
-# fi
+echo "checking format"
+if ! dotnet format --verify-no-changes; then
+  echo "Code format issues found. Please run 'dotnet format' to fix them. Commit aborted."
+  exit 1
+fi
 
 echo "Running Tests"
 cd ../../tests/QuickBite.API.Tests
@@ -24,10 +24,10 @@ if ! dotnet test; then
   exit 1
 fi
 
-# echo "checking format"
-# if ! dotnet format --verify-no-changes; then
-#   echo "Code format issues found. Please run 'dotnet format' to fix them. Commit aborted."
-#   exit 1
-# fi
+echo "checking format"
+if ! dotnet format --verify-no-changes; then
+  echo "Code format issues found. Please run 'dotnet format' to fix them. Commit aborted."
+  exit 1
+fi
 
 echo "All checks passed. Proceeding with commit."

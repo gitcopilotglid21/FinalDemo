@@ -37,7 +37,7 @@ namespace QuickBite.API.Data
             modelBuilder.Entity<MenuItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                
+
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);
