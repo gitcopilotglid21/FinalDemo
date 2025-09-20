@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  quickbite-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/quickbite.db
+    volumes:
+      # Mount data directory for database persistence
+      - quickbite-data:/app/data
+    ports:
+      - "5280:8080"  # Map to the same port as local development
+    stdin_open: true
+    tty: true

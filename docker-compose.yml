@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  quickbite-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quickbite-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/quickbite.db
+    volumes:
+      # Mount data directory for SQLite database persistence
+      - quickbite-data:/app/data
+      # Mount source code for development (will be overridden in docker-compose.override.yml)
+      - ./src/QuickBite.API:/app/src/QuickBite.API:ro
+    networks:
+      - quickbite-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  quickbite-data:
+    driver: local
+
+networks:
+  quickbite-network:
+    driver: bridge

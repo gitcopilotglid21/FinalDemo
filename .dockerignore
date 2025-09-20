@@ -1,0 +1,87 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+Business_Requirements_Document.md
+*.md
+
+# CI/CD
+.github/
+.husky/
+
+# IDE and Editor files
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build output
+**/bin/
+**/obj/
+**/out/
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# Test results
+TestResults/
+**/TestResults/
+
+# Coverage reports
+coverage.xml
+coverage.json
+lcov.info
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Database files (will be mounted as volume)
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Docker files (don't copy Docker files into the image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore

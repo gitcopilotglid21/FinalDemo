@@ -19,6 +19,10 @@ builder.Services.AddDbContext<QuickBiteDbContext>(options =>
 // Register business services
 builder.Services.AddScoped<IMenuItemService, MenuItemService>();
 
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<QuickBiteDbContext>();
+
 // Configure FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
@@ -47,6 +51,9 @@ builder.Services.AddSwaggerGen(c =>
     {
         c.IncludeXmlComments(xmlPath);
     }
+
+    // Ensure all HTTP methods are documented
+    c.DocInclusionPredicate((name, api) => true);
 });
 
 var app = builder.Build();
@@ -77,6 +84,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 app.Run();
 
